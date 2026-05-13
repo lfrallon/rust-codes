@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::io::{self, Write};
+
 #[derive(Debug)]
 enum SpreadsheetCell {
     Int(i32),
@@ -53,7 +56,7 @@ fn main() {
     println!("Vector 7: {:#?}", row);
 
     // String
-    let mut s1 = String::new();
+    let s1 = String::new();
     println!("String 1: {}", s1);
 
     let data = "initial contents";
@@ -111,5 +114,182 @@ fn main() {
 
     for b in "Зд".bytes() {
         println!("{b}");
+    }
+
+    hash_maps();
+
+    // List activity
+    let lists = vec![1, 5, 3, 9, 2, 4, 6, 2];
+
+    let median_result = get_median(lists.clone());
+    let mode_result = get_mode(lists);
+
+    println!("Median: {:#?} Mode: {:#?}", median_result, mode_result);
+
+    let my_string = "Apple Pay";
+    let string_result = to_pig_latin(my_string);
+
+    println!("Pig latin: {string_result}");
+
+    company_employees();
+
+}
+
+fn get_median(mut lists: Vec<i32>) -> Option<f64> {
+    if lists.is_empty() {
+        return None;
+    }
+    
+    // 1. Sort the list (must be mutable)
+    lists.sort();
+
+    let len = lists.len();
+    let mid = len / 2;
+
+    if len % 2 == 0 {
+        // 2. Even length: average of the two middle elements
+        Some((lists[mid - 1] + lists[mid]) as f64 / 2.0)
+    } else {
+        // 3. Odd length: middle element
+        Some(lists[mid] as f64)
+    }
+}
+
+fn get_mode(lists: Vec<i32>) -> Vec<i32> {
+    let mut counts = HashMap::new();
+
+    // Step 1: Count occurrences of each number
+    for &list in &lists {
+        *counts.entry(list).or_insert(0) += 1;
+    }
+
+    // Step 2: Filter for numbers with count > 1
+    let repeats: Vec<i32> = counts
+        .into_iter()
+        .filter(|&(_, count)| count > 1)
+        .map(|(num, _)| num)
+        .collect();
+
+    return repeats;
+}
+
+fn to_pig_latin(text: &str) -> String {
+    let vowels = ['a', 'e', 'i', 'o', 'u'];
+    let mut result = Vec::new();
+
+    for word in text.split_whitespace() {
+        let first_char = word.chars().next().unwrap().to_ascii_lowercase();
+
+        if vowels.contains(&first_char) {
+            // Rule for vowels
+            result.push(format!("{}-hay", word));
+        } else {
+            // Rule for consonants: split into (first char) and (rest)
+            let mut chars = word.chars();
+            let first = chars.next().unwrap();
+            let rest: String = chars.collect();
+            result.push(format!("{}-{}ay", rest, first));
+        }
+    }
+
+    result.join(" ")
+}
+
+fn hash_maps() {
+    let mut scores_one = HashMap::new();
+
+    scores_one.insert(String::from("Blue"), 10);
+    scores_one.insert(String::from("Yellow"), 50);
+
+    for (key, value) in &scores_one {
+        println!("{key}: {value}");
+    }
+
+    let team_name = String::from("Blue");
+    let score_result = scores_one.get(&team_name).copied().unwrap_or(0);
+
+    println!("Hash map 1: {:#?}", score_result);
+
+    let field_name = String::from("Favorite color");
+    let field_value = String::from("Blue");
+
+    let mut map_one = HashMap::new();
+    map_one.insert(field_name, field_value);
+    // field_name and field_value are invalid at this point, try using them and
+    // see what compiler error you get!
+
+    println!("Hash map 2: {:#?}", map_one);
+
+    let mut scores_three = HashMap::new();
+
+    scores_three.insert(String::from("Blue"), 10);
+    scores_three.insert(String::from("Blue"), 25);
+
+    println!("Hash map 3: {scores_three:?}");
+
+    let mut scores_four = HashMap::new();
+    scores_four.insert(String::from("Blue"), 10);
+
+    scores_four.entry(String::from("Yellow")).or_insert(50);
+    scores_four.entry(String::from("Blue")).or_insert(50);
+
+    println!("Hash map 4: {scores_four:?}");
+
+    let text = "hello world wonderful world";
+
+    let mut map_five = HashMap::new();
+
+    for word in text.split_whitespace() {
+        let count = map_five.entry(word).or_insert(0);
+        *count += 1;
+    }
+
+    println!("Hash map 5: {map_five:?}");
+}
+
+fn company_employees() {
+    let mut company: HashMap<String, Vec<String>> = HashMap::new();
+
+    println!("Commands: 'Add [Name] to [Dept]', 'List [Dept]', 'All', or 'quit'");
+
+    loop {
+        print!("> ");
+        io::stdout().flush().unwrap();
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).expect("Failed to read line");
+        let input = input.trim();
+
+        if input == "quit" { break; }
+
+        let words: Vec<&str> = input.split_whitespace().collect();
+
+        match words.as_slice() {
+            ["Add", name, "to", dept] => {
+                company.entry(dept.to_string())
+                    .or_insert(Vec::new())
+                    .push(name.to_string());
+                println!("Added {} to {}.", name, dept);
+            }
+            ["List", dept] => {
+                if let Some(employees) = company.get(*dept) {
+                    let mut sorted_employees = employees.clone();
+                    sorted_employees.sort();
+                    println!("{}: {:?}", dept, sorted_employees);
+                } else {
+                    println!("Department {} not found.", dept);
+                }
+            }
+            ["All"] => {
+                let mut depts: Vec<_> = company.keys().collect();
+                depts.sort();
+                for dept in depts {
+                    let mut names = company[dept].clone();
+                    names.sort();
+                    println!("{}: {:?}", dept, names);
+                }
+            }
+            _ => println!("Commands: 'Add [Name] to [Dept]', 'List [Dept]', 'All', or 'quit'"),
+        }
     }
 }
