@@ -1,7 +1,7 @@
 #[derive(PartialEq, Debug)]
-struct Shoe {
-    size: u32,
-    style: String,
+pub struct Shoe {
+    pub size: u32,
+    pub style: String,
 }
 
 pub fn shoes_in_size(shoes: Vec<Shoe>, shoe_size: u32) -> Vec<Shoe> {
